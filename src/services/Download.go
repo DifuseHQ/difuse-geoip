@@ -52,6 +52,59 @@ func compressGeoIPData() error {
 	return nil
 }
 
+func DownloadAndExtractMMDB() {
+	url := "https://download.maxmind.com/app/geoip_download?edition_id=GeoLite2-Country&license_key=" + os.Getenv("LICENSE_KEY") + "&suffix=tar.gz"
+	gzFilePath := "data_mmdb.tar.gz"
+	outputFolder := "data_mmdb"
+
+	err := downloadFile(gzFilePath, url)
+	if err != nil {
+		log.Fatalf("Error downloading file: %v", err)
+	}
+
+	if _, err := os.Stat(outputFolder); !os.IsNotExist(err) {
+		err = os.RemoveAll(outputFolder)
+		if err != nil {
+			log.Fatalf("Error deleting output folder: %v", err)
+		}
+	}
+
+	err = archiver.NewTarGz().Unarchive(gzFilePath, outputFolder)
+	if err != nil {
+		log.Fatalf("Error extracting file: %v", err)
+	}
+
+	err = os.Remove(gzFilePath)
+
+	if err != nil {
+		log.Fatalf("Error removing zip file: %v", err)
+	}
+
+	directoryContent, err := ioutil.ReadDir(outputFolder)
+	if err != nil {
+		log.Fatalf("Error reading data directory: %v", err)
+	}
+
+	var extractedFolderName string
+
+	for _, item := range directoryContent {
+		if item.IsDir() && strings.HasPrefix(item.Name(), "GeoLite2-Country_") {
+			extractedFolderName = item.Name()
+			break
+		}
+	}
+
+	if extractedFolderName == "" {
+		log.Fatalf("Extracted folder not found")
+	}
+
+	err = os.Rename(filepath.Join(outputFolder, extractedFolderName), "data_mmdb/geoip2_mmdb")
+
+	if err != nil {
+		log.Fatalf("Error renaming folder: %v", err)
+	}
+}
+
 func DownloadAndExtract() {
 	url := "https://download.maxmind.com/app/geoip_download?edition_id=GeoLite2-Country-CSV&license_key=" + os.Getenv("LICENSE_KEY") + "&suffix=zip"
 	zipFilePath := "data.zip"

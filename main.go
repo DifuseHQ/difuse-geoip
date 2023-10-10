@@ -35,6 +35,22 @@ func main() {
 		return err
 	})
 
+	app.Get("/mmdb", func(c *fiber.Ctx) error {
+		mu.Lock()
+		isDownloading = true
+		mu.Unlock()
+
+		c.Set("Content-Disposition", "attachment; filename=geoip.mmdb")
+		err := c.SendFile("data_mmdb/geoip2_mmdb/GeoLite2-Country.mmdb", true)
+
+		mu.Lock()
+		isDownloading = false
+		mu.Unlock()
+
+		return err
+	})
+
+	go services.DownloadAndExtractMMDB()
 	go services.DownloadAndExtract()
 
 	go func() {
@@ -43,6 +59,7 @@ func main() {
 			<-ticker.C
 			mu.Lock()
 			if !isDownloading {
+				services.DownloadAndExtractMMDB()
 				services.DownloadAndExtract()
 			}
 			mu.Unlock()
