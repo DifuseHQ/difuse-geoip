@@ -59,7 +59,8 @@ func DownloadAndExtractMMDB() {
 
 	err := downloadFile(gzFilePath, url)
 	if err != nil {
-		log.Fatalf("Error downloading file: %v", err)
+		log.Println("Error downloading file: %v", err)
+		return
 	}
 
 	if _, err := os.Stat(outputFolder); !os.IsNotExist(err) {
@@ -71,7 +72,7 @@ func DownloadAndExtractMMDB() {
 
 	err = archiver.NewTarGz().Unarchive(gzFilePath, outputFolder)
 	if err != nil {
-		log.Fatalf("Error extracting file: %v", err)
+		log.Fatalf("Error extracting file DAEMMDB: %v", err)
 	}
 
 	err = os.Remove(gzFilePath)
@@ -107,7 +108,7 @@ func DownloadAndExtractMMDB() {
 
 func DownloadAndExtract() {
 	url := "https://download.maxmind.com/app/geoip_download?edition_id=GeoLite2-Country-CSV&license_key=" + os.Getenv("LICENSE_KEY") + "&suffix=zip"
-	zipFilePath := "data.zip"
+	zipFilePath := "data.tar.gz"
 	outputFolder := "data"
 
 	err := downloadFile(zipFilePath, url)
@@ -124,7 +125,7 @@ func DownloadAndExtract() {
 
 	err = archiver.NewZip().Unarchive(zipFilePath, outputFolder)
 	if err != nil {
-		log.Fatalf("Error extracting file: %v", err)
+		log.Fatalf("Error extracting file DAE: %v", err)
 	}
 
 	err = os.Remove(zipFilePath)
